@@ -1,7 +1,7 @@
 # AxionGraph (Python)
 
 <p align="center">
-  <img src="./docs/assets/axiongraph.png" alt="AxionGraph logo" height="500px" />
+  <img src="https://raw.githubusercontent.com/cachetronaut/axiongraph-py/main/docs/assets/axiongraph.png" alt="AxionGraph logo" height="500px" />
 </p>
 
 
