@@ -71,6 +71,10 @@ jobs:
           ARTIFACT_COUNT="$(find dist -maxdepth 1 -type f -name 'axiongraph-${{ steps.version.outputs.version }}*' | wc -l | tr -d ' ')"
           test "$ARTIFACT_COUNT" -eq 2
 
+      # Publish BEFORE pushing the release commit/tag so a failed publish leaves no residue.
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz
+
       - name: Commit version and tag
         run: |
           git config user.name "github-actions[bot]"
@@ -79,6 +83,3 @@ jobs:
           git commit -m "chore: release ${{ steps.version.outputs.tag }}"
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
           git push origin HEAD:main "${{ steps.version.outputs.tag }}"
-
-      - name: Publish to PyPI
-        run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz
