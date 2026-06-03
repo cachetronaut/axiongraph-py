@@ -56,9 +56,9 @@ classifiers = [
 dependencies = []
 
 # Optional backends are extras (the PyPI-extras model). Local stores need no extra —
-# sqlite3 is in the standard library. Future backends land here, e.g.:
-# [project.optional-dependencies]
-# store-convex = ["convex>=0.6.0"]
+# sqlite3 is in the standard library. Future backends land here, e.g. convex/neo4j.
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2", "psycopg-pool>=3.2"]
 
 [project.urls]
 Homepage = "https://github.com/cachetronaut/axiongraph-py"
@@ -74,6 +74,7 @@ packages = [
     "src/axiongraph",
     "packages/core/src/axiongraph_core",
     "packages/store-local/src/axiongraph_store_local",
+    "packages/store-postgres/src/axiongraph_store_postgres",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -89,6 +90,10 @@ dev = [
     "pytest>=8",
     "ruff>=0.6",
     "ty>=0.0.1a8",
+    # The Postgres adapter's tests import psycopg; keep it in the dev env so they collect
+    # and run (the env-gated suite still skips without AXIONGRAPH_TEST_POSTGRES_URL).
+    "psycopg[binary]>=3.2",
+    "psycopg-pool>=3.2",
 ]
 
 [tool.ruff]
@@ -100,10 +105,15 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages"]
+# The dev-only testkit is not installed (it never ships in the wheel); put it on the path
+# so adapter tests can import the shared contract.
+pythonpath = ["packages/testkit/src"]
 
 [tool.ty.environment]
 extra-paths = [
     "src",
     "packages/core/src",
     "packages/store-local/src",
+    "packages/store-postgres/src",
+    "packages/testkit/src",
 ]

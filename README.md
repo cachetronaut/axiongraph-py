@@ -48,10 +48,15 @@ AxionGraph ships as a single `axiongraph` distribution. The core API is the top-
 optional backends are installed as extras (`pip install axiongraph[...]`). The local stores
 need no extra — `sqlite3` is in the standard library.
 
-| Import | Description |
-| --- | --- |
-| `axiongraph` | Event model, deterministic reducer, canonicalizer, vocabulary machinery, and the `GraphStore` port. |
-| `axiongraph.store_local` | Zero-service reference adapters: an in-memory store and a `sqlite3`-backed durable store. |
+| Import | Description | Extra |
+| --- | --- | --- |
+| `axiongraph` | Event model, deterministic reducer, canonicalizer, vocabulary machinery, and the `GraphStore` port. | — |
+| `axiongraph.store_local` | Zero-service reference adapters: an in-memory store and a `sqlite3`-backed durable store. | — |
+| `axiongraph.store_postgres` | Durable `PostgresStore` backed by `psycopg`: a `jsonb` event log keyed on `(runId, seq)`, idempotent appends, live-fold snapshots. | `postgres` |
+
+```sh
+pip install 'axiongraph[postgres]'   # pulls in psycopg
+```
 
 ## Install
 
@@ -75,7 +80,8 @@ interchangeable; any future adapter that passes the shared contract suite drops 
 ## Development
 
 Python 3.11+ and [uv](https://docs.astral.sh/uv/). The repo is an internal package set
-(`packages/core`, `packages/store-local`) assembled by hatchling into the one `axiongraph`
+(`packages/core`, `packages/store-local`, `packages/store-postgres`, plus a dev-only
+`packages/testkit` shared contract suite) assembled by hatchling into the one `axiongraph`
 distribution.
 
 ```sh
@@ -84,6 +90,9 @@ uv run ruff check . && uv run ruff format --check .
 uv run ty check
 uv run pytest
 ```
+
+The Postgres contract suite is gated on `AXIONGRAPH_TEST_POSTGRES_URL`; it is skipped unless
+set, and CI runs it against a `postgres:16` service.
 
 ## Status
 
