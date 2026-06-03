@@ -1,5 +1,10 @@
 # AxionGraph (Python)
 
+<p align="center">
+  <img src="./docs/assets/axiongraph.png" alt="AxionGraph logo" height="500px" />
+</p>
+
+
 > Invisible events. Replayable graphs.
 
 AxionGraph is an append-only event model and deterministic reducer for execution graphs.
