@@ -1,0 +1,9 @@
+{
+  "runId": "run_parity",
+  "seq": 5,
+  "nodes": [
+    { "id": "a", "kind": "agent", "label": "Researcher" },
+    { "id": "b", "kind": "tool", "label": "Web Search" }
+  ],
+  "edges": [{ "id": "e1", "kind": "called_tool", "from": "a", "to": "b", "status": "completed" }]
+}

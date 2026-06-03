@@ -1,0 +1,42 @@
+[
+  {
+    "id": "ev1",
+    "runId": "run_parity",
+    "seq": 1,
+    "ts": "2026-06-02T12:00:00.000Z",
+    "type": "node_created",
+    "node": { "id": "a", "kind": "agent", "label": "Researcher" }
+  },
+  {
+    "id": "ev2",
+    "runId": "run_parity",
+    "seq": 2,
+    "ts": "2026-06-02T12:00:01.000Z",
+    "type": "node_created",
+    "node": { "id": "x", "kind": "wizard", "label": "Unknown kind" }
+  },
+  {
+    "id": "ev3",
+    "runId": "run_parity",
+    "seq": 3,
+    "ts": "2026-06-02T12:00:02.000Z",
+    "type": "edge_created",
+    "edge": { "id": "e1", "kind": "called_tool", "from": "a", "to": "a", "status": "completed" }
+  },
+  {
+    "id": "ev4",
+    "runId": "run_parity",
+    "seq": 4,
+    "ts": "2026-06-02T12:00:03.000Z",
+    "type": "edge_created",
+    "edge": { "id": "e2", "kind": "teleports_to", "from": "a", "to": "a", "status": "completed" }
+  },
+  {
+    "id": "ev5",
+    "runId": "run_parity",
+    "seq": 5,
+    "ts": "2026-06-02T12:00:04.000Z",
+    "type": "node_updated",
+    "node": { "id": "a", "label": "Research Agent" }
+  }
+]

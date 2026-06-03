@@ -1,0 +1,8 @@
+{
+  "op": "validate",
+  "vocab": {
+    "nodeKinds": ["agent", "tool", "artifact"],
+    "edgeKinds": ["called_tool", "created_artifact"]
+  },
+  "rejected": ["ev2", "ev4"]
+}

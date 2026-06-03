@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ev1",
+    "runId": "run_parity",
+    "seq": 1,
+    "ts": "2026-06-02T12:00:00.000Z",
+    "type": "node_created",
+    "node": { "id": "a", "kind": "agent", "label": "Researcher" }
+  },
+  {
+    "id": "ev1-redelivered",
+    "runId": "run_parity",
+    "seq": 1,
+    "ts": "2026-06-02T12:00:00.000Z",
+    "type": "node_created",
+    "node": { "id": "a", "kind": "agent", "label": "DROPPED — stale seq" }
+  },
+  {
+    "id": "ev2",
+    "runId": "run_parity",
+    "seq": 2,
+    "ts": "2026-06-02T12:00:01.000Z",
+    "type": "node_created",
+    "node": { "id": "b", "kind": "tool", "label": "Web Search" }
+  }
+]

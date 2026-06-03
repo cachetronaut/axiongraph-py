@@ -1,0 +1,84 @@
+name: PyPI Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump to publish"
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: pypi-release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: "${{ github.event_name == 'workflow_dispatch' || (!startsWith(github.event.head_commit.message, 'chore: release v') && !contains(github.event.head_commit.message, '[skip release]')) }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify
+        run: |
+          uv sync --dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run ty check
+          uv run pytest
+
+      - name: Select version bump
+        id: bump
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.bump }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=patch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version
+        id: version
+        run: |
+          uv version --bump "${{ steps.bump.outputs.value }}"
+          VERSION="$(uv version --short)"
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists." >&2
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          uv build --out-dir dist --clear
+          ARTIFACT_COUNT="$(find dist -maxdepth 1 -type f -name 'axiongraph-${{ steps.version.outputs.version }}*' | wc -l | tr -d ' ')"
+          test "$ARTIFACT_COUNT" -eq 2
+
+      - name: Commit version and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml uv.lock
+          git commit -m "chore: release ${{ steps.version.outputs.tag }}"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin HEAD:main "${{ steps.version.outputs.tag }}"
+
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz

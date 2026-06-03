@@ -1,0 +1,4 @@
+{
+  "op": "subgraph",
+  "keepNodeKinds": ["agent", "tool"]
+}

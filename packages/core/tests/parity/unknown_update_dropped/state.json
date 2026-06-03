@@ -1,0 +1,6 @@
+{
+  "runId": "run_parity",
+  "seq": 3,
+  "nodes": [{ "id": "a", "kind": "agent", "label": "Researcher" }],
+  "edges": []
+}
