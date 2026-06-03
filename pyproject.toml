@@ -1,6 +1,6 @@
 [project]
 name = "axiongraph"
-version = "0.0.4"
+version = "0.0.5"
 description = "Invisible events. Replayable graphs. An append-only execution-graph event model and deterministic reducer — provider-agnostic, storage is a port."
 readme = "README.md"
 requires-python = ">=3.11"
