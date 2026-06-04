@@ -53,9 +53,11 @@ need no extra — `sqlite3` is in the standard library.
 | `axiongraph` | Event model, deterministic reducer, canonicalizer, vocabulary machinery, and the `GraphStore` port. | — |
 | `axiongraph.store_local` | Zero-service reference adapters: an in-memory store and a `sqlite3`-backed durable store. | — |
 | `axiongraph.store_postgres` | Durable `PostgresStore` backed by `psycopg`: a `jsonb` event log keyed on `(runId, seq)`, idempotent appends, live-fold snapshots. | `postgres` |
+| `axiongraph.store_convex` | Client-only `ConvexStore` for a [Convex](https://convex.dev) deployment running the axiongraph component, with a reactive `subscribe()`. The component itself ships in the TypeScript package; this drives it. | `convex` |
 
 ```sh
 pip install 'axiongraph[postgres]'   # pulls in psycopg
+pip install 'axiongraph[convex]'     # pulls in the convex client
 ```
 
 ## Install
@@ -80,9 +82,9 @@ interchangeable; any future adapter that passes the shared contract suite drops 
 ## Development
 
 Python 3.11+ and [uv](https://docs.astral.sh/uv/). The repo is an internal package set
-(`packages/core`, `packages/store-local`, `packages/store-postgres`, plus a dev-only
-`packages/testkit` shared contract suite) assembled by hatchling into the one `axiongraph`
-distribution.
+(`packages/core`, `packages/store-local`, `packages/store-postgres`, `packages/store-convex`,
+plus a dev-only `packages/testkit` shared contract suite) assembled by hatchling into the one
+`axiongraph` distribution.
 
 ```sh
 uv sync --dev
@@ -92,7 +94,9 @@ uv run pytest
 ```
 
 The Postgres contract suite is gated on `AXIONGRAPH_TEST_POSTGRES_URL`; it is skipped unless
-set, and CI runs it against a `postgres:16` service.
+set, and CI runs it against a `postgres:16` service. The Convex adapter is client-only (the
+component and its offline `convex-test` harness live in the TypeScript package); its live smoke
+test is gated on `CONVEX_URL` and runs against a deployment you stand up with `npx convex dev`.
 
 ## Status
 

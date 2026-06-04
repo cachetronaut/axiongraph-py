@@ -56,9 +56,10 @@ classifiers = [
 dependencies = []
 
 # Optional backends are extras (the PyPI-extras model). Local stores need no extra —
-# sqlite3 is in the standard library. Future backends land here, e.g. convex/neo4j.
+# sqlite3 is in the standard library. Future backends land here, e.g. neo4j.
 [project.optional-dependencies]
 postgres = ["psycopg[binary]>=3.2", "psycopg-pool>=3.2"]
+convex = ["convex>=0.6"]
 
 [project.urls]
 Homepage = "https://github.com/cachetronaut/axiongraph-py"
@@ -75,6 +76,7 @@ packages = [
     "packages/core/src/axiongraph_core",
     "packages/store-local/src/axiongraph_store_local",
     "packages/store-postgres/src/axiongraph_store_postgres",
+    "packages/store-convex/src/axiongraph_store_convex",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -94,6 +96,10 @@ dev = [
     # and run (the env-gated suite still skips without AXIONGRAPH_TEST_POSTGRES_URL).
     "psycopg[binary]>=3.2",
     "psycopg-pool>=3.2",
+    # The Convex adapter imports the convex client; keep it in the dev env so type checking
+    # resolves it (the live smoke test still skips without CONVEX_URL — there is no offline
+    # Convex harness on the Python side).
+    "convex>=0.6",
 ]
 
 [tool.ruff]
@@ -115,5 +121,6 @@ extra-paths = [
     "packages/core/src",
     "packages/store-local/src",
     "packages/store-postgres/src",
+    "packages/store-convex/src",
     "packages/testkit/src",
 ]
