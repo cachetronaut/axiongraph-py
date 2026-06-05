@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from typing import Any, cast
 
 from axiongraph_core import GraphEvent, GraphState, reduce_all
+from store_driver_kit import Row, ScanOptions, Transaction
 
 try:
     from convex import ConvexClient
@@ -41,22 +42,31 @@ class ConvexStore:
         self._client = client
         self._append_ref = f"{prefix}:append"
         self._read_events_ref = f"{prefix}:readEvents"
+        self._driver = _ConvexGraphDriver(client, self._append_ref, self._read_events_ref)
 
     async def append(self, events: Sequence[GraphEvent]) -> None:
         """Append events. Idempotent on ``(runId, seq)`` (the component skips a known seq)."""
         if not events:
             return
-        # The convex client coerces its args dict; events are dicts at runtime. Type the boundary
-        # as ``dict[str, Any]`` rather than fight ``CoercibleToConvexValue`` over a TypedDict.
-        args: dict[str, Any] = {"events": list(events)}
-        await asyncio.to_thread(self._client.mutation, self._append_ref, args)
+
+        async def work(txn: Transaction) -> None:
+            for event in events:
+                await txn.upsert("events", _event_key(event), {"payload": event})
+
+        await self._driver.transaction(work)
 
     async def read_events(self, run_id: str, since_seq: int = 0) -> AsyncIterator[GraphEvent]:
         """Read a run's events in ``seq`` order, only those with ``seq > since_seq``."""
-        args: dict[str, Any] = {"runId": run_id, "sinceSeq": since_seq}
-        rows = await asyncio.to_thread(self._client.query, self._read_events_ref, args)
-        for row in rows:
-            yield cast(GraphEvent, row)
+
+        async def work(txn: Transaction) -> list[GraphEvent]:
+            events: list[GraphEvent] = []
+            scan_opts = ScanOptions(after={"runId": run_id, "seq": since_seq})
+            async for row in txn.scan("events", {"runId": run_id}, scan_opts):
+                events.append(cast(GraphEvent, row["payload"]))
+            return events
+
+        for event in await self._driver.transaction(work):
+            yield event
 
     async def snapshot(self, run_id: str) -> GraphState:
         """The reduced state for a run — a client-side fold over ``read_events`` (reuses core)."""
@@ -107,6 +117,76 @@ class ConvexStore:
                 yield cast(GraphEvent, item)
         finally:
             stop.set()
+
+
+class _ConvexGraphDriver:
+    backend = "convex"
+
+    def __init__(self, client: ConvexClient, append_ref: str, read_events_ref: str) -> None:
+        self._client = client
+        self._append_ref = append_ref
+        self._read_events_ref = read_events_ref
+
+    async def transaction(self, work: Callable[[Transaction], Awaitable[Any]]) -> Any:
+        return await work(
+            _ConvexGraphTransaction(self._client, self._append_ref, self._read_events_ref)
+        )
+
+    async def close(self) -> None:
+        return None
+
+
+class _ConvexGraphTransaction:
+    def __init__(self, client: ConvexClient, append_ref: str, read_events_ref: str) -> None:
+        self._client = client
+        self._append_ref = append_ref
+        self._read_events_ref = read_events_ref
+
+    async def upsert(self, table: str, key: Row, row: Row) -> None:
+        self._assert_table(table)
+        _ = key
+        # The Convex client coerces its args dict; events are dicts at runtime. Type the boundary
+        # as ``dict[str, Any]`` rather than fight ``CoercibleToConvexValue`` over a TypedDict.
+        args: dict[str, Any] = {"events": [row["payload"]]}
+        await asyncio.to_thread(self._client.mutation, self._append_ref, args)
+
+    async def get(self, table: str, key: Row) -> Row | None:
+        self._assert_table(table)
+        args: dict[str, Any] = {"runId": key["runId"], "sinceSeq": int(key["seq"]) - 1}
+        rows = await asyncio.to_thread(self._client.query, self._read_events_ref, args)
+        for raw in cast(list[Any], rows):
+            event = cast(GraphEvent, raw)
+            if event["seq"] == key["seq"]:
+                return {"payload": event}
+        return None
+
+    async def scan(
+        self, table: str, prefix: Row, opts: ScanOptions | None = None
+    ) -> AsyncIterator[Row]:
+        self._assert_table(table)
+        options = opts or ScanOptions()
+        after_seq = options.after.get("seq", 0) if options.after is not None else 0
+        args: dict[str, Any] = {"runId": prefix["runId"], "sinceSeq": after_seq}
+        rows = await asyncio.to_thread(self._client.query, self._read_events_ref, args)
+        for index, raw in enumerate(cast(list[Any], rows)):
+            if options.limit is not None and index >= options.limit:
+                break
+            yield {"payload": cast(GraphEvent, raw)}
+
+    async def compare_and_apply(self, table: str, key: Row, expect: Any, next_value: Any) -> bool:
+        self._assert_table(table)
+        _ = (key, expect, next_value)
+        raise NotImplementedError(
+            "ConvexGraphTransaction.compare_and_apply is not supported by GraphStore"
+        )
+
+    def _assert_table(self, table: str) -> None:
+        if table != "events":
+            raise ValueError(f"Unknown Convex graph table: {table}")
+
+
+def _event_key(event: GraphEvent) -> Row:
+    return {"runId": event["runId"], "seq": event["seq"]}
 
 
 __all__ = ["ConvexStore"]

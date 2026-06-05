@@ -113,7 +113,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 testpaths = ["packages"]
 # The dev-only testkit is not installed (it never ships in the wheel); put it on the path
 # so adapter tests can import the shared contract.
-pythonpath = ["packages/testkit/src"]
+pythonpath = ["packages/testkit/src", "../store-driver-kit-py/src"]
 
 [tool.ty.environment]
 extra-paths = [
@@ -123,4 +123,5 @@ extra-paths = [
     "packages/store-postgres/src",
     "packages/store-convex/src",
     "packages/testkit/src",
+    "../store-driver-kit-py/src",
 ]
