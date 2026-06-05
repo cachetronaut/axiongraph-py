@@ -30,7 +30,9 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout DockBay sibling
-        run: git clone --depth 1 https://github.com/cachetronaut/dockbay-py.git ../dockbay-py
+        run: |
+          mkdir -p ../../dockbay
+          git clone --depth 1 https://github.com/cachetronaut/dockbay-py.git ../../dockbay/dockbay-py
 
       - uses: astral-sh/setup-uv@v5
         with:
