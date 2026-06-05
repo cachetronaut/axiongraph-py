@@ -32,6 +32,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout DockBay sibling
+        run: git clone --depth 1 https://github.com/cachetronaut/dockbay-py.git ../dockbay-py
+
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
