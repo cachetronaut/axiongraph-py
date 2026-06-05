@@ -19,7 +19,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from typing import Any, cast
 
 from axiongraph_core import GraphEvent, GraphState, reduce_all
-from store_driver_kit import Row, ScanOptions, Transaction
+from dockbay import Row, ScanOptions, Transaction
 
 try:
     from convex import ConvexClient

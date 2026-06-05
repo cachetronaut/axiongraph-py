@@ -10,7 +10,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from typing import Any, cast
 
 from axiongraph_core import GraphEvent, GraphState, reduce_all
-from store_driver_kit import Row, ScanOptions, Transaction, canonicalize
+from dockbay import Row, ScanOptions, Transaction, canonicalize
 
 try:
     from psycopg import AsyncConnection, sql
